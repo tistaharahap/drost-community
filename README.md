@@ -397,6 +397,37 @@ portable MCP clients:
 
 Restart or reload the client after changing its configuration.
 
+### Remote service: Streamable HTTP
+
+To run Drost on a remote host or a PaaS such as Coolify without `docker exec`,
+give the container a bearer token. The entrypoint then starts the MCP server
+automatically over Streamable HTTP on port 8080:
+
+```sh
+docker run -d \
+  --name drost-ai \
+  --restart unless-stopped \
+  -e DROST_MCP_AUTH_TOKEN="$(openssl rand -hex 32)" \
+  -p 8080:8080 \
+  -v drost-ai-workspace:/workspace \
+  ghcr.io/drost-ai/drost-community:1.0.0
+```
+
+Clients connect to `http://HOST:8080/mcp` with
+`Authorization: Bearer <token>`. For example, with Claude Code:
+
+```sh
+claude mcp add --transport http drost http://HOST:8080/mcp \
+  --header "Authorization: Bearer <token>"
+```
+
+`GET /healthz` is the only unauthenticated route. The server refuses to start
+over HTTP without a token, because Drost deliberately exposes arbitrary command
+execution; set `DROST_MCP_ALLOW_UNAUTHENTICATED=1` only on an isolated network.
+`DROST_MCP_TRANSPORT=streamable-http` forces HTTP mode, `DROST_MCP_TRANSPORT=stdio`
+forces the classic `docker exec` mode, and `DROST_MCP_PORT` changes the port.
+Put the service behind TLS before exposing it beyond a trusted network.
+
 ### Compatibility fallback: compact mode
 
 Use compact mode only when an MCP client cannot initialize the full catalog or

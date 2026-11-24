@@ -515,6 +515,9 @@ def main() -> None:
     parser = argparse.ArgumentParser(prog="drost-mcp")
     parser.add_argument("--self-test", action="store_true")
     parser.add_argument("--catalog-json", action="store_true")
+    parser.add_argument("--transport", choices=("stdio", "streamable-http"), default="stdio")
+    parser.add_argument("--host", default=os.environ.get("DROST_MCP_HOST", "0.0.0.0"))
+    parser.add_argument("--port", type=int, default=int(os.environ.get("DROST_MCP_PORT", "8080")))
     args = parser.parse_args()
     if args.self_test:
         result = self_test()
@@ -524,6 +527,11 @@ def main() -> None:
         return
     if args.catalog_json:
         print(json.dumps([spec.as_dict() for spec in CATALOG], indent=2, sort_keys=True))
+        return
+    if args.transport == "streamable-http":
+        from .http_server import serve
+
+        serve(mcp, args.host, args.port)
         return
     mcp.run(transport="stdio")
 

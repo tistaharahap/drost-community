@@ -257,7 +257,14 @@ ENV PATH="/opt/drost-ai-venv/bin:/opt/drost-analysis/bin:/opt/drost-checkov/bin:
 HEALTHCHECK --interval=30s --timeout=10s --start-period=20s --retries=3 \
     CMD ["drost-mcp", "--self-test"]
 
+COPY --chmod=0755 docker-entrypoint.sh /usr/local/bin/drost-entrypoint
+
+ENV DROST_MCP_HOST=0.0.0.0 \
+    DROST_MCP_PORT=8080
+
+EXPOSE 8080
+
 VOLUME ["/workspace"]
 
-ENTRYPOINT ["/usr/bin/tini", "--"]
+ENTRYPOINT ["/usr/bin/tini", "--", "/usr/local/bin/drost-entrypoint"]
 CMD ["sleep", "infinity"]
